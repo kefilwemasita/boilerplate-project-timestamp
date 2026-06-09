@@ -1,43 +1,43 @@
-// index.js
-// where your node app starts
+'use strict';
 
 // init project
 var express = require('express');
 var app = express();
 
-// enable CORS (https://en.wikipedia.org/wiki/Cross-origin_resource_sharing)
-// so that your API is remotely testable by FCC 
+// enable CORS
 var cors = require('cors');
-app.use(cors({optionsSuccessStatus: 200}));  // some legacy browsers choke on 204
+app.use(cors({ optionsSuccessStatus: 200 }));
 
-// http://expressjs.com/en/starter/static-files.html
+// static files
 app.use(express.static('public'));
 
-// http://expressjs.com/en/starter/basic-routing.html
+// homepage
 app.get("/", function (req, res) {
   res.sendFile(__dirname + '/views/index.html');
 });
 
 
-// your first API endpoint... 
+// ==============================
+// FIXED TIMESTAMP MICROSERVICE
+// ==============================
 
-// No date → current time
-app.get("/api/:date?", function (req, res) {
-  let date = req.params.date;
+// helper function (avoids duplication)
+function handleDate(req, res) {
+  let dateParam = req.params.date;
 
   let dateObj;
 
-  // EMPTY DATE → current time
-  if (!date) {
+  // empty date → current time
+  if (!dateParam) {
     dateObj = new Date();
   }
-  // UNIX timestamp
-  else if (/^\d+$/.test(date)) {
-    dateObj = new Date(parseInt(date));
+  // unix timestamp
+  else if (/^\d+$/.test(dateParam)) {
+    dateObj = new Date(parseInt(dateParam));
   }
   // date string
   else {
-    dateObj = new Date(date);
+    dateObj = new Date(dateParam);
   }
 
   // invalid date check
@@ -49,9 +49,16 @@ app.get("/api/:date?", function (req, res) {
     unix: dateObj.getTime(),
     utc: dateObj.toUTCString()
   });
-});
+}
 
-// Listen on port set in environment variable or default to 3000
+
+// IMPORTANT: Express 5 safe routes (NO "?")
+app.get("/api", handleDate);
+app.get("/api/", handleDate);
+app.get("/api/:date", handleDate);
+
+
+// start server
 var listener = app.listen(process.env.PORT || 3000, function () {
   console.log('Your app is listening on port ' + listener.address().port);
 });
